@@ -1,0 +1,80 @@
+def neighborhood_based(xi, x_t, y_t, R) :
+  """ Calculates the euclidean distance for a certain data point of index i in the dataframe df and finds all the neighbors within the circle
+  of Radius R then returns Stressed or Not Stressed depending on the number of neighbors from the classes Stressed/Not Stressed """
+
+  stressed_count = 0
+  notstressed_count = 0
+  distance = [] #this list will contain every single euclidean distance from the point we're using to all the other data points in the dataset
+  distance_R = []
+
+  for index in range(len(x_t)) : #we iterate over the whole dataframe that contains our data points
+    if ((euclidean_distance([xi[0], xi[1]], [x_t[index][0], x_t[index][1]])) !=0) :                 
+        val_dist = (euclidean_distance([xi[0], xi[1]], [x_t[index][0], x_t[index][1]])) # the iteration is done for every point in the dataset except the one we use to find its neighbors 
+        distance.append([val_dist,y_t[index][0]]) 
+  
+  
+  #Here we create a list (li) that will contain all the euclidean distances and their indexes 
+  li=[] 
+  for i in range(len(distance)): 
+    if distance[i][0] <= R :
+      distance_R.append(distance[i])
+
+  for j in range(len(distance_R)) : 
+    if distance_R[j][1] == 0 : #if the index (that's in distance_R) is less than 199 then the data point is in the not stressed class
+      notstressed_count += 1
+    else : #otherwise it's in the Stressed class
+      stressed_count += 1
+    
+  if stressed_count > notstressed_count : #if most points are from the class Stressed we return Stressed
+    return 1 
+  else : #otherwise we return Not Stressed
+    return 0
+    
+def nbc(x, x_t, y_t, R) : 
+  """ For every point in the dataframe, we apply the nearest_neighbor function to classify the point and then return
+  the balanced accuracy and print the confusion matrix values  """
+  y_hat =[]
+  for i in range(len(x)) : #for every point that is originally in the Not Stressed class, we find the k nearest neighbors
+    y_hat.append(neighborhood_based(x[i], x_t, y_t, R))
+  return y_hat
+
+
+def nbc_performance(x, y, x_t, y_t, R) :
+  """ For every point in the dataframe, we apply the neighborhood_based function to classify the point and then return
+  the balanced accuracy and print the confusion matrix values  """
+  tp = 0 #True positives
+  tn = 0 #True negatives
+  fp = 0 #False positives
+  fn = 0 #False negatives
+  recall = 0
+  specificity = 0
+  recall = 0
+  balanced_accuracy = 0
+  precision = 0
+  F1=0
+  for i in range(len(x)) : #for every point that is originally in the Not Stressed class, we find the k nearest neighbors
+    result = neighborhood_based(x[i], x_t, y_t, R)
+    if (result == 'Not Stressed' and  y[i][0]==0): #if the result is Not Stressed, than this is a true negative
+      tn += 1 
+
+    elif (result == 'Stressed' and  y[i][0]==0): 
+      fp += 1 #otherwise the result is a false positive
+
+    elif (result == 'Stressed' and  y[i][0]==1) : 
+      tp += 1 #if the result is Stressed, than this is a true positive
+         
+    elif (result == 'Not Stressed' and y[i][0]==1) : 
+      fn += 1 #otherwise the result is a false negative
+
+  #if (tp + fn !=0 and fp + tn !=0 and recall + specificity!=0 and precision + recall!=0) :
+  if (tp + fn !=0) :
+    recall = tp / (tp + fn)
+  if (fp + tn !=0) :
+    specificity = tn / (fp + tn)
+  balanced_accuracy = (recall + specificity) / 2
+  if (tp + fp !=0) :
+    precision = tp / (tp + fp)
+  if (precision + recall !=0) :
+    F1 = (2*precision*recall) / (precision + recall)
+  
+  return balanced_accuracy, precision, recall, F1
